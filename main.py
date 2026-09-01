@@ -47,6 +47,7 @@ class StartRunRequest(BaseModel):
     definition: ProcessDefinition
     input: Dict[str, Any] = Field(default_factory=dict)
     callback_url: Optional[str] = None
+    callback_secret: Optional[str] = None
 
 
 class StartRunResponse(BaseModel):
@@ -66,6 +67,7 @@ async def emit(callback_url: Optional[str], event: str, run: StartRunRequest, ex
         "process_run_id": run.process_run_id,
         "execution_id": execution_id,
         "payload": payload,
+        "callback_secret": run.callback_secret,
     }
     async with httpx.AsyncClient(timeout=20) as client:
         try:
