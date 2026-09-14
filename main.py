@@ -1,3 +1,6 @@
+import hashlib
+import hmac
+import json
 import os
 import uuid
 from datetime import datetime, timezone
@@ -7,9 +10,10 @@ import httpx
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 
-app = FastAPI(title="FlowOps Gateway", version="0.1.0")
+app = FastAPI(title="FlowOps Gateway", version="0.3.0")
 
 SERVICE_TOKEN = os.getenv("FLOWOPS_SERVICE_TOKEN", "")
+CALLBACK_SECRET = os.getenv("FLOWOPS_CALLBACK_SECRET", "")
 N8N_BASE_URL = os.getenv("N8N_BASE_URL", "").rstrip("/")
 N8N_API_KEY = os.getenv("N8N_API_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
@@ -21,7 +25,7 @@ def now_iso() -> str:
 
 def require_auth(authorization: Optional[str]) -> None:
     if not SERVICE_TOKEN:
-        return
+        raise HTTPException(status_code=503, detail="Gateway authentication is not configured")
     if authorization != f"Bearer {SERVICE_TOKEN}":
         raise HTTPException(status_code=401, detail="Unauthorized")
 
@@ -47,12 +51,16 @@ class StartRunRequest(BaseModel):
     definition: ProcessDefinition
     input: Dict[str, Any] = Field(default_factory=dict)
     callback_url: Optional[str] = None
-    callback_secret: Optional[str] = None
 
 
 class StartRunResponse(BaseModel):
     execution_id: str
     status: str
+
+
+class ResumeRunRequest(StartRunRequest):
+    decision: str
+    approval_index: int = Field(ge=0)
 
 
 async def emit(callback_url: Optional[str], event: str, run: StartRunRequest, execution_id: str, payload: Dict[str, Any]):
@@ -67,13 +75,23 @@ async def emit(callback_url: Optional[str], event: str, run: StartRunRequest, ex
         "process_run_id": run.process_run_id,
         "execution_id": execution_id,
         "payload": payload,
-        "callback_secret": run.callback_secret,
     }
+    if not CALLBACK_SECRET:
+        raise RuntimeError("Callback authentication is not configured")
+    encoded = json.dumps(body, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    timestamp = now_iso()
+    signature = hmac.new(
+        CALLBACK_SECRET.encode("utf-8"),
+        timestamp.encode("utf-8") + b"." + encoded,
+        hashlib.sha256,
+    ).hexdigest()
     async with httpx.AsyncClient(timeout=20) as client:
-        try:
-            await client.post(callback_url, json=body)
-        except Exception:
-            pass
+        response = await client.post(callback_url, content=encoded, headers={
+            "content-type": "application/json",
+            "x-flowops-timestamp": timestamp,
+            "x-flowops-signature": f"sha256={signature}",
+        })
+        response.raise_for_status()
 
 
 async def run_n8n(step: Step, run: StartRunRequest) -> Dict[str, Any]:
@@ -119,31 +137,14 @@ async def run_agent(step: Step, run: StartRunRequest) -> Dict[str, Any]:
         return {"response_id": data.get("id"), "output_text": data.get("output_text", "")}
 
 
-@app.get("/health")
-async def health():
-    return {"status": "ok", "service": "flowops-gateway", "version": "0.1.0"}
-
-
-@app.post("/v1/process-runs", response_model=StartRunResponse, status_code=202)
-async def start_process_run(
-    run: StartRunRequest,
-    authorization: Optional[str] = Header(default=None),
-    idempotency_key: Optional[str] = Header(default=None, alias="Idempotency-Key"),
-    x_flowops_organization: Optional[str] = Header(default=None, alias="X-FlowOps-Organization"),
-):
-    require_auth(authorization)
-    if x_flowops_organization and x_flowops_organization != run.organization_id:
-        raise HTTPException(status_code=400, detail="Organization header/body mismatch")
-
-    execution_id = idempotency_key or str(uuid.uuid4())
-    await emit(run.callback_url, "run.started", run, execution_id, {"status": "running"})
-
-    for index, step in enumerate(run.definition.steps):
+async def execute_process_steps(run: StartRunRequest, execution_id: str, start_index: int = 0) -> str:
+    for index in range(start_index, len(run.definition.steps)):
+        step = run.definition.steps[index]
         await emit(run.callback_url, "step.started", run, execution_id, {"index": index, "step": step.model_dump()})
 
         if step.requires_approval or step.type == "approval":
             await emit(run.callback_url, "approval.requested", run, execution_id, {"index": index, "step": step.model_dump()})
-            return StartRunResponse(execution_id=execution_id, status="waiting_approval")
+            return "waiting_approval"
 
         try:
             if step.type == "n8n":
@@ -162,4 +163,51 @@ async def start_process_run(
             raise HTTPException(status_code=502, detail=f"Step failed: {step.name}")
 
     await emit(run.callback_url, "run.completed", run, execution_id, {"status": "completed"})
-    return StartRunResponse(execution_id=execution_id, status="completed")
+    return "completed"
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok", "service": "flowops-gateway", "version": "0.3.0"}
+
+
+@app.post("/v1/process-runs", response_model=StartRunResponse, status_code=202)
+async def start_process_run(
+    run: StartRunRequest,
+    authorization: Optional[str] = Header(default=None),
+    idempotency_key: Optional[str] = Header(default=None, alias="Idempotency-Key"),
+    x_flowops_organization: Optional[str] = Header(default=None, alias="X-FlowOps-Organization"),
+):
+    require_auth(authorization)
+    if not x_flowops_organization or x_flowops_organization != run.organization_id:
+        raise HTTPException(status_code=400, detail="Organization header/body mismatch")
+
+    execution_id = idempotency_key or str(uuid.uuid4())
+    await emit(run.callback_url, "run.started", run, execution_id, {"status": "running"})
+    status = await execute_process_steps(run, execution_id)
+    return StartRunResponse(execution_id=execution_id, status=status)
+
+
+@app.post("/v1/process-runs/{execution_id}/resume", response_model=StartRunResponse)
+async def resume_process_run(
+    execution_id: str,
+    run: ResumeRunRequest,
+    authorization: Optional[str] = Header(default=None),
+    x_flowops_organization: Optional[str] = Header(default=None, alias="X-FlowOps-Organization"),
+):
+    require_auth(authorization)
+    if not x_flowops_organization or x_flowops_organization != run.organization_id:
+        raise HTTPException(status_code=400, detail="Organization header/body mismatch")
+    if run.decision not in {"approved", "rejected"}:
+        raise HTTPException(status_code=400, detail="Decision must be approved or rejected")
+
+    await emit(run.callback_url, "approval.resolved", run, execution_id, {
+        "index": run.approval_index,
+        "decision": run.decision,
+    })
+    if run.decision == "rejected":
+        await emit(run.callback_url, "run.cancelled", run, execution_id, {"reason": "Rejected by human approver"})
+        return StartRunResponse(execution_id=execution_id, status="cancelled")
+
+    status = await execute_process_steps(run, execution_id, run.approval_index + 1)
+    return StartRunResponse(execution_id=execution_id, status=status)
