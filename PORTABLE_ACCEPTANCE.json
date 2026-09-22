@@ -1,0 +1,15 @@
+{
+  "schema_version": "automatiq.portable-acceptance.v1",
+  "source_builder": "hercules",
+  "source_repository": "kris-cote/scratch",
+  "source_commit": "b3468c2c176b4f78e75c0a1dd620e302616eb1df",
+  "normalization_mode": "fastapi_source_passthrough",
+  "frontend_mode": "root_level_vanilla_vite",
+  "source_runtime_preserved": true,
+  "hercules_runtime_metadata_removed": true,
+  "intended_destinations": [
+    "railway",
+    "render"
+  ],
+  "production": false
+}
