@@ -11,5 +11,6 @@
     "railway",
     "render"
   ],
-  "production": false
+  "production": false,
+  "railway_trigger": "2026-09-22T20:53:00Z"
 }
