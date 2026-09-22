@@ -1,0 +1,1 @@
+# Automatiq Codex qualification fixture
