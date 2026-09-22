@@ -1,0 +1,15 @@
+{
+  "schema_version": "automatiq.portable-acceptance.v1",
+  "source_builder": "replit",
+  "source_repository": "kris-cote/scratch",
+  "source_commit": "123a1550bc13cec3587d8f9d73aa0ccfc7046e07",
+  "normalization_mode": "fastapi_source_passthrough",
+  "frontend_mode": "root_level_vanilla_vite",
+  "source_runtime_preserved": true,
+  "replit_runtime_metadata_removed": true,
+  "intended_destinations": [
+    "railway",
+    "render"
+  ],
+  "production": false
+}
