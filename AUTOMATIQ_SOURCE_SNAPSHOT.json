@@ -1,8 +1,11 @@
 {
-  "schema_version":"automatiq.builder-source.v1",
-  "builder":"stackblitz",
-  "qualification_scope":"public GitHub source-of-truth workflow",
-  "contains_secrets":false,
-  "intended_destination_adapters":["railway","render"],
-  "production_ready":false
+  "schema_version": "automatiq.builder-source.v1",
+  "builder": "zip",
+  "qualification_scope": "public immutable ZIP source workflow",
+  "contains_secrets": false,
+  "intended_destination_adapters": [
+    "railway",
+    "render"
+  ],
+  "production_ready": false
 }
