@@ -1,7 +1,7 @@
 {
   "schema_version": "automatiq.builder-source.v1",
-  "builder": "generic_git",
-  "qualification_scope": "public immutable Git source workflow",
+  "builder": "hercules",
+  "qualification_scope": "public immutable Git source contract",
   "contains_secrets": false,
   "intended_destination_adapters": [
     "railway",
