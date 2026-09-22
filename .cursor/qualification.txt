@@ -1,0 +1,1 @@
+Automatiq Cursor source-contract qualification marker.
