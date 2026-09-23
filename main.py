@@ -96,8 +96,10 @@ async def emit(callback_url: Optional[str], event: str, run: StartRunRequest, ex
 
 async def run_n8n(step: Step, run: StartRunRequest) -> Dict[str, Any]:
     webhook_path = step.config.get("webhook_path")
-    if not N8N_BASE_URL or not webhook_path:
-        return {"status": "skipped", "reason": "n8n not configured"}
+    if not N8N_BASE_URL or not N8N_API_KEY or not webhook_path:
+        raise RuntimeError("n8n execution is not configured")
+    if not isinstance(webhook_path, str) or not webhook_path.startswith("webhook/") or ".." in webhook_path or "://" in webhook_path or "?" in webhook_path:
+        raise ValueError("Invalid n8n webhook path")
     headers = {"content-type": "application/json"}
     if N8N_API_KEY:
         headers["x-n8n-api-key"] = N8N_API_KEY
@@ -118,7 +120,7 @@ async def run_n8n(step: Step, run: StartRunRequest) -> Dict[str, Any]:
 
 async def run_agent(step: Step, run: StartRunRequest) -> Dict[str, Any]:
     if not OPENAI_API_KEY:
-        return {"status": "skipped", "reason": "OpenAI not configured"}
+        raise RuntimeError("AI execution is not configured")
     prompt = step.config.get("prompt") or f"Execute the FlowOps process step: {step.name}"
     payload = {
         "model": step.config.get("model", "gpt-5-mini"),
@@ -151,8 +153,10 @@ async def execute_process_steps(run: StartRunRequest, execution_id: str, start_i
                 result = await run_n8n(step, run)
             elif step.type == "ai_agent":
                 result = await run_agent(step, run)
+            elif step.type == "notification" and step.config.get("mode") == "demonstration":
+                result = {"status": "recorded", "message": "Demonstration only; no external notification sent"}
             elif step.type in {"human_task", "wait", "condition", "notification", "api"}:
-                result = {"status": "placeholder", "type": step.type}
+                raise ValueError(f"Step type is not available for live execution: {step.type}")
             else:
                 raise ValueError(f"Unsupported step type: {step.type}")
 
