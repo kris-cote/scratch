@@ -1,7 +1,7 @@
 {
   "schema_version": "automatiq.builder-source.v1",
-  "builder": "bolt",
-  "qualification_scope": "public immutable Git source contract",
+  "builder": "stackblitz",
+  "qualification_scope": "public immutable Git fixture",
   "contains_secrets": false,
   "intended_destination_adapters": [
     "railway",
