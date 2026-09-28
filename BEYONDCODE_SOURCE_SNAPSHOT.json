@@ -1,0 +1,17 @@
+{
+  "schema_version": "beyondcode.source-snapshot.v1",
+  "source_builder": "lovable",
+  "source_project_id": "110a0e28-d0c5-4d52-b264-0832512c686d",
+  "source_commit": "351041e41d7cf6672f1f04f20e65325deb94131a",
+  "acquired_via": "Lovable project file API",
+  "contains_secret_values": false,
+  "omitted": [
+    ".env",
+    "public/favicon.ico"
+  ],
+  "omitted_reason": {
+    ".env": "secret/config file intentionally excluded; migrate variable names through a separate environment manifest",
+    "public/favicon.ico": "binary cosmetic asset excluded from text snapshot"
+  },
+  "certification_scope": "immutable real-builder source snapshot for deep migration qualification"
+}
