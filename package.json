@@ -1,5 +1,5 @@
 {
-  "name": "beyondcode-replit-deep-cert-fixture",
+  "name": "beyondcode-webcontainer-deep-cert-fixture",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,6 @@
     "test": "node scripts/smoke.mjs"
   },
   "dependencies": {
-    "better-sqlite3": "^11.8.1",
     "express": "^5.1.0",
     "node-cron": "^4.2.1"
   }
