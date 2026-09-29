@@ -21,10 +21,13 @@ function insertUser(id,email,password,displayName,role) {
   const salt = crypto.createHash("sha256").update("replit-cert:"+id).digest("hex").slice(0,32);
   db.prepare(`INSERT OR IGNORE INTO users(id,email,password_salt,password_hash,created_at) VALUES (?,?,?,?,?)`)
     .run(id,email,salt,hashPassword(password,salt),CREATED);
+  const suffix=id.slice(-12);
+  const profileId=`40000000-0000-4000-8000-${suffix}`;
+  const roleId=`50000000-0000-4000-8000-${suffix}`;
   db.prepare(`INSERT OR IGNORE INTO profiles(id,user_id,display_name,created_at) VALUES (?,?,?,?)`)
-    .run(id.replace(/.$/,"a"),id,displayName,CREATED);
+    .run(profileId,id,displayName,CREATED);
   db.prepare(`INSERT OR IGNORE INTO user_roles(id,user_id,role,created_at) VALUES (?,?,?,?)`)
-    .run(id.replace(/.$/,"b"),id,role,CREATED);
+    .run(roleId,id,role,CREATED);
 }
 
 export function seed() {
