@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import { spawn } from "node:child_process";
 
-const db="/tmp/replit-cert-smoke.db";
+const db="/tmp/webcontainer-cert-smoke.json";
 try{fs.unlinkSync(db)}catch{}
 const env={...process.env,PORT:"3107",DB_PATH:db,SESSION_SECRET:"smoke-only"};
 const child=spawn(process.execPath,["src/server.js"],{env,stdio:["ignore","pipe","pipe"]});
@@ -22,8 +22,8 @@ async function api(path,token,opts={}){
  const text=await r.text(); return {status:r.status,body:text?JSON.parse(text):null};
 }
 try{
- const admin=await login("cert-admin@example.test","Replit-Cert-Admin-2026!");
- const member=await login("cert-member@example.test","Replit-Cert-Member-2026!");
+ const admin=await login("cert-admin@example.test","WebContainer-Cert-Admin-2026!");
+ const member=await login("cert-member@example.test","WebContainer-Cert-Member-2026!");
  const ready=await api("/api/migration-readiness",admin);
  if(ready.body.counts.users!==2||ready.body.counts.projects!==5||ready.body.counts.tasks!==15||ready.body.counts.activity_events!==3||ready.body.counts.automation_runs!==0) throw new Error("baseline counts mismatch");
  const ar=await api("/api/roles",admin), mr=await api("/api/roles",member);
