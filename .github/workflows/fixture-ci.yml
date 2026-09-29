@@ -1,7 +1,7 @@
 name: Replit deep-cert fixture CI
 on:
   push:
-    branches: ["certification/replit-deep-fixture-v1"]
+    branches: ["certification/replit-deep-fixture-v1", "certification/webcontainer-deep-fixture-v1"]
   workflow_dispatch:
 jobs:
   smoke:
