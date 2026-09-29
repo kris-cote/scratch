@@ -1,0 +1,36 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Replit Deep Certification Fixture</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:900px;margin:40px auto;padding:0 20px;color:#172033}button,input{font:inherit;padding:9px;margin:4px}pre{background:#f5f6f8;padding:14px;border-radius:10px;overflow:auto}.row{display:flex;gap:12px;flex-wrap:wrap}.card{border:1px solid #ddd;border-radius:14px;padding:18px;margin:16px 0}
+</style></head>
+<body>
+<h1>BeyondCode Deploy — Replit Deep Certification Fixture</h1>
+<p>Isolated synthetic app for testing deep migration out of Replit.</p>
+<div class="card">
+<h2>Sign in</h2>
+<input id="email" placeholder="cert-admin@example.test" value="cert-admin@example.test">
+<input id="password" type="password" placeholder="Fixture password">
+<button onclick="login()">Sign in</button>
+</div>
+<div class="row">
+<button onclick="call('/healthz',false)">Health</button>
+<button onclick="call('/api/me')">Me</button>
+<button onclick="call('/api/roles')">Roles</button>
+<button onclick="call('/api/migration-readiness')">Migration readiness</button>
+<button onclick="call('/api/projects')">Projects</button>
+<button onclick="call('/api/tasks')">Tasks</button>
+</div>
+<pre id="out">Ready.</pre>
+<script>
+let token="";
+async function login(){
+ const r=await fetch('/api/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:email.value,password:password.value})});
+ const j=await r.json(); token=j.access_token||""; out.textContent=JSON.stringify(j,null,2);
+}
+async function call(url,auth=true){
+ const r=await fetch(url,{headers:auth&&token?{authorization:'Bearer '+token}:{}});
+ const t=await r.text(); try{out.textContent=JSON.stringify(JSON.parse(t),null,2)}catch{out.textContent=t}
+}
+</script>
+</body></html>

@@ -1,1 +1,5 @@
-run = "npm run dev"
+run = "npm start"
+
+[deployment]
+run = ["sh", "-c", "npm start"]
+deploymentTarget = "cloudrun"

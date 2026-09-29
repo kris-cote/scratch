@@ -1,14 +1,42 @@
-# FlowOps Gateway
+# BeyondCode Deploy — Replit Deep Certification Fixture
 
-Temporary deployment repository for the FlowOps AI execution gateway.
+Purpose-built Git-backed Replit migration fixture.
 
-This service is designed for Railway and provides the execution-plane API used by the FlowOps Base44 control plane.
+This app is intentionally small but stateful so BeyondCode Deploy can prove a real Replit-hosted source boundary and then migrate it to portable infrastructure.
 
-Core responsibilities:
-- accept tenant-scoped process runs
-- enforce approval pauses
-- dispatch deterministic integration work to n8n
-- dispatch AI reasoning steps to OpenAI
-- emit signed lifecycle callbacks back to FlowOps
+Reference state after first boot:
+- 2 synthetic users
+- 2 profiles
+- 2 role rows
+- 5 projects
+- 15 tasks
+- 3 activity events
+- 0 automation runs
+- SQLite database with explicit schema
+- admin/member authorization
+- idempotent daily overdue scan
+- health and migration-readiness endpoints
 
-Railway should deploy from the repository root using the included Dockerfile and railway.toml.
+The fixture is certification-only and contains no real personal data.
+
+## Run
+
+npm install
+npm start
+
+The app listens on PORT (default 3000).
+
+## Certification scope
+
+The migration must preserve or deliberately transition:
+- application source
+- database schema and records
+- user identities
+- profiles and roles
+- authorization behavior
+- audit history
+- scheduled/background behavior
+- configuration names
+- runtime health/readiness
+
+The fixture's built-in credentials are synthetic test credentials only and must never be reused outside this isolated certification app.

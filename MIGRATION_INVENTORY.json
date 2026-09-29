@@ -1,0 +1,50 @@
+{
+  "schema_version": "beyondcode.replit.deep-cert.v1",
+  "source_builder": "replit",
+  "expected_state": {
+    "users": 2,
+    "profiles": 2,
+    "user_roles": 2,
+    "projects": 5,
+    "tasks": 15,
+    "activity_events": 3,
+    "automation_runs": 0
+  },
+  "authorization": {
+    "member": [
+      "read",
+      "create",
+      "update"
+    ],
+    "admin": [
+      "read",
+      "create",
+      "update",
+      "delete"
+    ],
+    "role_visibility": "member_self_admin_all"
+  },
+  "scheduled_behavior": {
+    "name": "daily_overdue_scan",
+    "cadence": "17 3 * * *",
+    "idempotent_by": "job_name+run_key"
+  },
+  "endpoints": [
+    "/healthz",
+    "/api/login",
+    "/api/me",
+    "/api/roles",
+    "/api/projects",
+    "/api/tasks",
+    "/api/activity",
+    "/api/automation/overdue-scan",
+    "/api/migration-readiness"
+  ],
+  "secrets_or_config_names": [
+    "PORT",
+    "DB_PATH",
+    "SESSION_SECRET",
+    "CERT_ADMIN_PASSWORD",
+    "CERT_MEMBER_PASSWORD"
+  ]
+}
